@@ -1,5 +1,4 @@
 #!/bin/bash
-docker run -d -p 80:80 -p 443:443 --name rancher-server rancher/rancher:latest
 
 while ! curl -k https://localhost/ping; do sleep 3; done
 
@@ -25,10 +24,18 @@ CLUSTERRESPONSE=`curl -s 'https://127.0.0.1/v3/cluster' -H 'content-type: applic
 CLUSTERID=`echo $CLUSTERRESPONSE | jq -r .id`
 
 # Specify role flags to use
-ROLEFLAGS="--etcd --controlplane --worker"
+ETCD-ROLEFLAG="--etcd"
+CONTROLLER-ROLEFLAG="--controlplane"
+WORKER-ROLEFLAG="--worker"
 
 # Generate token (clusterRegistrationToken) and extract nodeCommand
 AGENTCOMMAND=`curl -s 'https://127.0.0.1/v3/clusterregistrationtoken' -H 'content-type: application/json' -H "Authorization: Bearer $APITOKEN" --data-binary '{"type":"clusterRegistrationToken","clusterId":"'$CLUSTERID'"}' --insecure | jq -r .nodeCommand`
 
-# Show the command
-echo "${AGENTCOMMAND} ${ROLEFLAGS}"
+# Show the command for ETCD NODES
+echo "${AGENTCOMMAND} ${ETCD-ROLEFLAG}" 
+
+# Show the command for CONTROLLER NODES
+echo "${AGENTCOMMAND} ${CONTROLLER-ROLEFLAG}"
+
+# Show the command for WORKER NODES
+echo "${AGENTCOMMAND} ${WORKER-ROLEFLAG}"
